@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RQL Compatability Test</title>
+    <script src="https://unpkg.com/intern@next/browser/intern.js"></script>
+    <script>
+		intern.configure({
+			loader: {
+				"script": "dojo",
+				"options": {
+					"async": true,
+					"isDebug": true,
+					"packages": [
+						{
+							"name": "dojo",
+							"location": "./node_modules/dojo"
+						},
+						{
+							"name": "dstore",
+							"location": "node_modules/dojo-dstore"
+						},
+						{
+							"name": "promised-io",
+							"location": "node_modules/promised-io"
+						},
+						{
+							"name": "rql",
+							"location": "node_modules/rollun-rql"
+						}
+					]
+				}
+			},
+			suites: [
+				'./tests/compatabilityTest.js',
+			],
+			reporters: 'html'
+		});
+    </script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+</head>
+<body>
+<script>
+    intern.run();
+</script>
+<i class="fas fa-cog fa-spin "></i>
+</body>
+</html>

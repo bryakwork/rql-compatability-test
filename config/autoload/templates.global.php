@@ -14,7 +14,7 @@ return [
     ],
 
     'templates' => [
-        'layout' => 'layout::default',
+       // 'layout' => 'layout::default',
     ],
 
     'view_helpers' => [

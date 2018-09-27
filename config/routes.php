@@ -14,3 +14,5 @@
  */
 
 /** @var \Zend\Expressive\Application $app */
+
+$app->route('/api/datastore[/{resourceName}[/{id}]]', 'api-datastore', ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], 'api-datastore');
