@@ -2,7 +2,7 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 	const {assert} = intern.getPlugin('chai'),
 		{registerSuite} = intern.getPlugin('interface.object');
 
-	const users = [
+	const testCollection = [
 			{
 				"id": "5bacfee08134d4646fd8741e",
 				"isActive": 1,
@@ -246,9 +246,9 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 				"isActive": 0,
 				"balance": "$1,670.22",
 				"age": 30,
-				"eyeColor": "green",
-				"firstName": "Lea",
-				"lastName": "Marsh",
+				"eyeColor": "GREEN",
+				"firstName": "LEA",
+				"lastName": "MARSH",
 				"phone": "+1 (996) 508-3986",
 				"registered": "Monday, January 12, 2015 7:07 PM",
 				"latitude": -26.970452,
@@ -260,23 +260,23 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 				"isActive": 1,
 				"balance": "$1,033.21",
 				"age": 32,
-				"eyeColor": "brown",
-				"firstName": "Ora",
-				"lastName": "Beck",
+				"eyeColor": "BROWN",
+				"firstName": "ORA",
+				"lastName": "BECK",
 				"phone": "+1 (865) 478-3776",
 				"registered": "Monday, July 7, 2014 1:19 AM",
 				"latitude": -36.235635,
 				"longitude": -68.16712,
-				"favoriteFruit": "banana"
+				"favoriteFruit": "BANANA"
 			},
 			{
 				"id": "5bacfee1ff3b1a3c8cf1d5eb",
 				"isActive": 1,
 				"balance": "$3,976.25",
 				"age": 25,
-				"eyeColor": "brown",
-				"firstName": "Hoover",
-				"lastName": "Olsen",
+				"eyeColor": "BROWN",
+				"firstName": "HOOVER",
+				"lastName": "OLSEN",
 				"phone": "+1 (913) 489-2935",
 				"registered": "Saturday, October 17, 2015 6:46 AM",
 				"latitude": -78.691136,
@@ -293,16 +293,11 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 
 	function checkQueryResultsEquality(query) {
 		return new Promise((resolve, reject) => {
-			fetch(new Request(`${testDatastoreUrl}?${query}`, {
-					'method': 'GET',
-					headers: datastoreRequestHeaders,
-				})
-			).then(
+			asyncQueryDatastore(query).then(
 				(datastoreResponse) => {
-					const usersCopy = lang.clone(users),
-						jsArrayResult = _.sortBy(jsArray.query(query, {}, usersCopy), [function (obj) {
-							return obj.id;
-						}]);
+					const jsArrayResult = _.sortBy(queryJsArray(query), [function (obj) {
+						return obj.id;
+					}]);
 					datastoreResponse.text().then((responseText) => {
 						const datastoreResult = _.sortBy(JSON.parse(responseText), [function (obj) {
 								return obj.id;
@@ -321,6 +316,25 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 				}
 			)
 		});
+	}
+
+	function asyncQueryDatastore(queryString) {
+		return fetch(new Request(`${testDatastoreUrl}?${queryString}`, {
+				'method': 'GET',
+				headers: datastoreRequestHeaders,
+			})
+		)
+	}
+
+	function queryJsArray(queryString) {
+		const usersCopy = lang.clone(testCollection);
+		return jsArray.query(queryString, {}, usersCopy);
+	}
+
+	function sortById(collection) {
+		return _.sortBy(collection, [function (obj) {
+			return obj.id;
+		}]);
 	}
 
 	registerSuite('RQL Implementations Compatability Test', {
@@ -351,11 +365,11 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 						// });
 						Promise.all(deletePromises).then(() => {
 							//put new data in datastore
-							for (let i = 0; i < users.length; i++) {
+							for (let i = 0; i < testCollection.length; i++) {
 								putPromises.push(fetch(new Request(testDatastoreUrl, {
 									method: 'POST',
 									headers: datastoreRequestHeaders,
-									body: JSON.stringify(users[i])
+									body: JSON.stringify(testCollection[i])
 								})));
 							}
 							resolve();
@@ -366,20 +380,18 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 					})
 				},
 				'"select" node is compatible'() {
+					//this.skip();
 					const selectQueryString = 'select(id,firstName,phone)';
 					return checkQueryResultsEquality(selectQueryString);
 				},
 
 				'"limit" node is compatible'() {
-					const limitQueryString = 'limit(3,0)';
+					//this.skip();
+					const queryString = 'limit(3,0)';
 					return new Promise((resolve, reject) => {
-						fetch(new Request(`${testDatastoreUrl}?${limitQueryString}`, {
-								'method': 'GET',
-								headers: datastoreRequestHeaders,
-							})
-						).then((datastoreResponse) => {
-							const usersCopy = lang.clone(users),
-								jsArrayResult = jsArray.query(limitQueryString, {}, usersCopy);
+						asyncQueryDatastore(queryString).then((datastoreResponse) => {
+							const
+								jsArrayResult = queryJsArray(queryString);
 							datastoreResponse.text().then((responseText) => {
 								const datastoreResult = JSON.parse(responseText);
 								try {
@@ -394,15 +406,12 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 				},
 
 				'"sort" node is compatible'() {
-					const limitQueryString = 'sort(+latitude)';
+					//this.skip();
+					const queryString = 'sort(+latitude)';
 					return new Promise((resolve, reject) => {
-						fetch(new Request(`${testDatastoreUrl}?${limitQueryString}`, {
-								'method': 'GET',
-								headers: datastoreRequestHeaders,
-							})
-						).then((datastoreResponse) => {
-							const usersCopy = lang.clone(users),
-								jsArrayResult = jsArray.query(limitQueryString, {}, usersCopy);
+						asyncQueryDatastore(queryString).then((datastoreResponse) => {
+							const
+								jsArrayResult = queryJsArray(queryString);
 							datastoreResponse.text().then((responseText) => {
 								const datastoreResult = JSON.parse(responseText),
 									differencesArray = _.differenceWith(jsArrayResult, datastoreResult, _.isEqual);
@@ -417,60 +426,151 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 					});
 				},
 				'"in" node is compatible'() {
-					const limitQueryString = 'in(eyeColor,(green,brown))';
-					return checkQueryResultsEquality(limitQueryString);
+					//this.skip();
+					const queryString = 'in(eyeColor,(green,brown))';
+					return checkQueryResultsEquality(queryString);
 				},
 				'"out" node is compatible'() {
-					const limitQueryString = 'out(favoriteFruit,(banana,apple))';
-					return checkQueryResultsEquality(limitQueryString);
+					//this.skip();
+					const queryString = 'out(favoriteFruit,(banana,apple))';
+					return checkQueryResultsEquality(queryString);
 				},
 				'"and" node is compatible'() {
-					const limitQueryString = 'and(in(eyeColor,(green,blue)),out(favoriteFruit,(pear,apple)))';
-					return checkQueryResultsEquality(limitQueryString);
+					//this.skip();
+					const queryString = 'and(in(eyeColor,(green,blue)),out(favoriteFruit,(pear,apple)))';
+					return checkQueryResultsEquality(queryString);
 				},
 				'"not" node is compatible'() {
-					const limitQueryString = 'not(in(eyeColor,(green,brown)))';
-					return checkQueryResultsEquality(limitQueryString);
+					//this.skip();
+					const queryString = 'not(in(eyeColor,(green,brown)))';
+					return checkQueryResultsEquality(queryString);
 				},
 				'"or" node is compatible'() {
-					const limitQueryString = 'or(in(eyeColor,(green,brown)),in(favoriteFruit,(banana,apple)))';
-					return checkQueryResultsEquality(limitQueryString);
+					//this.skip();
+					const queryString = 'or(in(eyeColor,(green,brown)),in(favoriteFruit,(banana,apple)))';
+					return checkQueryResultsEquality(queryString);
 				},
 				'"eq" node is compatible'() {
-					const limitQueryString = 'eq(firstName,Britney)';
-					return checkQueryResultsEquality(limitQueryString);
+					//this.skip();
+					const queryString = 'eq(firstName,Britney)';
+					return checkQueryResultsEquality(queryString);
 				},
 				'"ge" node is compatible'() {
-					const limitQueryString = 'ge(latitude,-36)';
-					return checkQueryResultsEquality(limitQueryString);
+					//this.skip();
+					const queryString = 'ge(latitude,-36)';
+					return checkQueryResultsEquality(queryString);
 				},
 				'"gt" node is compatible'() {
-					const limitQueryString = 'gt(longitude,71)';
-					return checkQueryResultsEquality(limitQueryString);
+					//this.skip();
+					const queryString = 'gt(longitude,71)';
+					return checkQueryResultsEquality(queryString);
 				},
 				'"le" node is compatible'() {
-					const limitQueryString = 'le(age,33)';
-					return checkQueryResultsEquality(limitQueryString);
+					//this.skip();
+					const queryString = 'le(age,33)';
+					return checkQueryResultsEquality(queryString);
 				},
 				'"lt" node is compatible'() {
-					const limitQueryString = 'lt(age,60)';
-					return checkQueryResultsEquality(limitQueryString);
+					//this.skip();
+					const queryString = 'lt(age,60)';
+					return checkQueryResultsEquality(queryString);
 				},
 				'"ne" node is compatible'() {
-					const limitQueryString = 'ne(id,5bacfee12639386f0953b3df)';
-					return checkQueryResultsEquality(limitQueryString);
+					//this.skip();
+					const queryString = 'ne(id,5bacfee12639386f0953b3df)';
+					return checkQueryResultsEquality(queryString);
 				},
 				'"match" node is compatible with "like" in PHP'() {
-					//'match is converted to 'like' in datastores
-					const limitQueryString = 'match(firstName,a)';
-					return checkQueryResultsEquality(limitQueryString);
+					//this.skip();
+					//'match' is converted to 'like' in datastores
+					const queryString = 'match(firstName,a)';
+					return checkQueryResultsEquality(queryString);
 				},
 				'"contains" node is compatible'() {
-					const limitQueryString = 'contains(id,4)';
-					return checkQueryResultsEquality(limitQueryString);
+					//this.skip();
+					const queryString = 'contains(id,4)';
+					return checkQueryResultsEquality(queryString);
 				},
 			},
-			//'"like" and '
+			'"match" and "contains" nodes case sensitivity': {
+				'"match"/"like" node is case-sensitive'() {
+					const uppercaseQueryString = 'match(eyeColor,BROWN)',
+						lowercaseQueryString = 'match(eyeColor,brown)';
+
+					return new Promise((resolve, reject) => {
+						const uppercaseQueryResponsePromise = fetch(new Request(`${testDatastoreUrl}?${uppercaseQueryString}`, {
+								'method': 'GET',
+								headers: datastoreRequestHeaders,
+							})
+							),
+							lowercaseQueryResponsePromise = fetch(new Request(`${testDatastoreUrl}?${lowercaseQueryString}`, {
+									'method': 'GET',
+									headers: datastoreRequestHeaders,
+								})
+							);
+						Promise.all([uppercaseQueryResponsePromise, lowercaseQueryResponsePromise]).then(
+							(responses) => {
+								const uppercaseJsArrayResult = sortById(queryJsArray(uppercaseQueryString)),
+									lowercaseJsArrayResult = sortById(queryJsArray(lowercaseQueryString));
+								const uppercaseResponseTextPromise = responses[0].text(),
+									lowercaseResponseTextPromise = responses[1].text();
+								Promise.all([uppercaseResponseTextPromise, lowercaseResponseTextPromise]).then(
+									(responseTexts) => {
+										const uppercaseDatastoreResult = sortById(JSON.parse(responseTexts[0])),
+											lowercaseDatastoreResult = sortById(JSON.parse(responseTexts[1])),
+											jsArrayDifferencesArray = _.differenceWith(uppercaseJsArrayResult, lowercaseJsArrayResult, _.isEqual),
+											datastoreDifferencesArray = _.differenceWith(uppercaseDatastoreResult, lowercaseDatastoreResult, _.isEqual);
+										try {
+											assert.isNotEmpty(jsArrayDifferencesArray, "jsArray implementation is case-sensitive");
+											assert.isNotEmpty(datastoreDifferencesArray, "datastore implementation is case-sensitive");
+											resolve();
+										} catch (error) {
+											reject(error)
+										}
+									});
+							},
+							(error) => {
+								reject(error)
+							}
+						)
+					});
+				},
+
+				'"contains" node is case-insensitive'() {
+					const uppercaseQueryString = 'contains(eyeColor,BROWN)',
+						lowercaseQueryString = 'contains(eyeColor,brown)';
+
+					return new Promise((resolve, reject) => {
+						const uppercaseQueryResponsePromise = asyncQueryDatastore(uppercaseQueryString),
+							lowercaseQueryResponsePromise = asyncQueryDatastore(lowercaseQueryString);
+						Promise.all([uppercaseQueryResponsePromise, lowercaseQueryResponsePromise]).then(
+							(responses) => {
+								const uppercaseJsArrayResult = sortById(queryJsArray(uppercaseQueryString)),
+									lowercaseJsArrayResult = sortById(queryJsArray(lowercaseQueryString));
+								const uppercaseResponseTextPromise = responses[0].text(),
+									lowercaseResponseTextPromise = responses[1].text();
+								Promise.all([uppercaseResponseTextPromise, lowercaseResponseTextPromise]).then(
+									(responseTexts) => {
+										const uppercaseDatastoreResult = sortById(JSON.parse(responseTexts[0])),
+											lowercaseDatastoreResult = sortById(JSON.parse(responseTexts[1])),
+											jsArrayDifferencesArray = _.differenceWith(uppercaseJsArrayResult, lowercaseJsArrayResult, _.isEqual),
+											datastoreDifferencesArray = _.differenceWith(uppercaseDatastoreResult, lowercaseDatastoreResult, _.isEqual);
+										try {
+											assert.isEmpty(jsArrayDifferencesArray, 'jsArray implementation is case-insensitive');
+											assert.isEmpty(datastoreDifferencesArray, 'datastore implementation is case-insensitive');
+											resolve();
+										} catch (error) {
+											reject(error)
+										}
+									});
+							},
+							(error) => {
+								reject(error)
+							}
+						)
+					});
+				}
+			}
 		}
 	});
 });
