@@ -1,4 +1,10 @@
-define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js'], function (Query, jsArray, lang, _) {
+define([
+	'rql/query',
+	'dojo/_base/lang',
+	'https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js',
+	'rgrid/store/QueryableMemoryStore',
+	'rgrid/store/QueryableStore',
+], function (Query, lang, _, QueryableMemoryStore, QueryableRestStore) {
 	const {assert} = intern.getPlugin('chai'),
 		{registerSuite} = intern.getPlugin('interface.object');
 
@@ -289,27 +295,23 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 		datastoreRequestHeaders = new Headers([
 			['Accept', 'application/json'],
 			['Content-Type', 'application/json']
-		]);
+		]),
+		memoryStore = new QueryableMemoryStore({data: testCollection}),
+		restStore = new QueryableRestStore({target: testDatastoreUrl});
 
 	function checkQueryResultsEquality(query) {
 		return new Promise((resolve, reject) => {
 			asyncQueryDatastore(query).then(
 				(datastoreResponse) => {
-					const jsArrayResult = _.sortBy(queryJsArray(query), [function (obj) {
-						return obj.id;
-					}]);
-					datastoreResponse.text().then((responseText) => {
-						const datastoreResult = _.sortBy(JSON.parse(responseText), [function (obj) {
-								return obj.id;
-							}]),
+					try {
+						const jsArrayResult = sortById(queryJsArray(query)),
+							datastoreResult = sortById(datastoreResponse),
 							differencesArray = _.differenceWith(jsArrayResult, datastoreResult, _.isEqual);
-						try {
-							assert.isEmpty(differencesArray);
-							resolve();
-						} catch (error) {
-							reject(error)
-						}
-					});
+						assert.isEmpty(differencesArray);
+						resolve();
+					} catch (error) {
+						reject(error)
+					}
 				},
 				(error) => {
 					reject(error)
@@ -319,16 +321,11 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 	}
 
 	function asyncQueryDatastore(queryString) {
-		return fetch(new Request(`${testDatastoreUrl}?${queryString}`, {
-				'method': 'GET',
-				headers: datastoreRequestHeaders,
-			})
-		)
+		return restStore.query(queryString);
 	}
 
 	function queryJsArray(queryString) {
-		const usersCopy = lang.clone(testCollection);
-		return jsArray.query(queryString, {}, usersCopy);
+		return memoryStore.querySync(queryString);
 	}
 
 	function sortById(collection) {
@@ -345,6 +342,7 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 					const deletePromises = [],
 						putPromises = [];
 					//delete all previous contents of datastore
+					//TODO: get it working normally
 					return new Promise((resolve, reject) => {
 						// fetch(new Request(testDatastoreUrl, {
 						// 		method: 'GET',
@@ -390,17 +388,13 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 					const queryString = 'limit(3,0)';
 					return new Promise((resolve, reject) => {
 						asyncQueryDatastore(queryString).then((datastoreResponse) => {
-							const
-								jsArrayResult = queryJsArray(queryString);
-							datastoreResponse.text().then((responseText) => {
-								const datastoreResult = JSON.parse(responseText);
-								try {
-									assert.equal(jsArrayResult.length, datastoreResult.length);
-									resolve();
-								} catch (error) {
-									reject(error)
-								}
-							});
+							try {
+								const jsArrayResult = queryJsArray(queryString);
+								assert.equal(jsArrayResult.length, datastoreResponse.length);
+								resolve();
+							} catch (error) {
+								reject(error)
+							}
 						})
 					});
 				},
@@ -410,18 +404,15 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 					const queryString = 'sort(+latitude)';
 					return new Promise((resolve, reject) => {
 						asyncQueryDatastore(queryString).then((datastoreResponse) => {
-							const
-								jsArrayResult = queryJsArray(queryString);
-							datastoreResponse.text().then((responseText) => {
-								const datastoreResult = JSON.parse(responseText),
-									differencesArray = _.differenceWith(jsArrayResult, datastoreResult, _.isEqual);
-								try {
-									assert.isEmpty(differencesArray);
-									resolve();
-								} catch (error) {
-									reject(error)
-								}
-							});
+							try {
+								const jsArrayResult = queryJsArray(queryString);
+								const differencesArray = _.differenceWith(jsArrayResult, datastoreResponse, _.isEqual);
+
+								assert.isEmpty(differencesArray);
+								resolve();
+							} catch (error) {
+								reject(error)
+							}
 						})
 					});
 				},
@@ -480,22 +471,21 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 					const queryString = 'ne(id,5bacfee12639386f0953b3df)';
 					return checkQueryResultsEquality(queryString);
 				},
-				'"match" node is compatible with "like" in PHP'() {
+				'"like" node is compatible'() {
 					//this.skip();
-					//'match' is converted to 'like' in datastores
-					const queryString = 'match(firstName,a)';
+					const queryString = 'like(firstName,*e)';
 					return checkQueryResultsEquality(queryString);
 				},
-				'"contains" node is compatible'() {
+				'"alike" node is compatible'() {
 					//this.skip();
-					const queryString = 'contains(id,4)';
+					const queryString = 'alike(id,*4*)';
 					return checkQueryResultsEquality(queryString);
 				},
 			},
-			'"match" and "contains" nodes case sensitivity': {
-				'"match"/"like" node is case-sensitive'() {
-					const uppercaseQueryString = 'match(eyeColor,BROWN)',
-						lowercaseQueryString = 'match(eyeColor,brown)';
+			'Case sensitivity compatability': {
+				'"like" node is case-sensitive'() {
+					const uppercaseQueryString = 'like(eyeColor,BROWN)',
+						lowercaseQueryString = 'like(eyeColor,brown)';
 
 					return new Promise((resolve, reject) => {
 						const uppercaseQueryResponsePromise = fetch(new Request(`${testDatastoreUrl}?${uppercaseQueryString}`, {
@@ -512,22 +502,17 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 							(responses) => {
 								const uppercaseJsArrayResult = sortById(queryJsArray(uppercaseQueryString)),
 									lowercaseJsArrayResult = sortById(queryJsArray(lowercaseQueryString));
-								const uppercaseResponseTextPromise = responses[0].text(),
-									lowercaseResponseTextPromise = responses[1].text();
-								Promise.all([uppercaseResponseTextPromise, lowercaseResponseTextPromise]).then(
-									(responseTexts) => {
-										const uppercaseDatastoreResult = sortById(JSON.parse(responseTexts[0])),
-											lowercaseDatastoreResult = sortById(JSON.parse(responseTexts[1])),
-											jsArrayDifferencesArray = _.differenceWith(uppercaseJsArrayResult, lowercaseJsArrayResult, _.isEqual),
-											datastoreDifferencesArray = _.differenceWith(uppercaseDatastoreResult, lowercaseDatastoreResult, _.isEqual);
-										try {
-											assert.isNotEmpty(jsArrayDifferencesArray, "jsArray implementation is case-sensitive");
-											assert.isNotEmpty(datastoreDifferencesArray, "datastore implementation is case-sensitive");
-											resolve();
-										} catch (error) {
-											reject(error)
-										}
-									});
+								try {
+									const uppercaseDatastoreResult = sortById(responses[0]),
+										lowercaseDatastoreResult = sortById(responses[1]),
+										jsArrayDifferencesArray = _.differenceWith(uppercaseJsArrayResult, lowercaseJsArrayResult, _.isEqual),
+										datastoreDifferencesArray = _.differenceWith(uppercaseDatastoreResult, lowercaseDatastoreResult, _.isEqual);
+									assert.isNotEmpty(jsArrayDifferencesArray, "jsArray implementation is case-sensitive");
+									assert.isNotEmpty(datastoreDifferencesArray, "datastore implementation is case-sensitive");
+									resolve();
+								} catch (error) {
+									reject(error)
+								}
 							},
 							(error) => {
 								reject(error)
@@ -535,41 +520,35 @@ define(['rql/query', 'rql/js-array', 'dojo/_base/lang', 'https://cdn.jsdelivr.ne
 						)
 					});
 				},
-
-				'"contains" node is case-insensitive'() {
-					const uppercaseQueryString = 'contains(eyeColor,BROWN)',
-						lowercaseQueryString = 'contains(eyeColor,brown)';
+				'"alike" node is case-insensitive'() {
+					const uppercaseQueryString = 'alike(eyeColor,BROWN)',
+						lowercaseQueryString = 'alike(eyeColor,brown)';
 
 					return new Promise((resolve, reject) => {
 						const uppercaseQueryResponsePromise = asyncQueryDatastore(uppercaseQueryString),
 							lowercaseQueryResponsePromise = asyncQueryDatastore(lowercaseQueryString);
 						Promise.all([uppercaseQueryResponsePromise, lowercaseQueryResponsePromise]).then(
 							(responses) => {
-								const uppercaseJsArrayResult = sortById(queryJsArray(uppercaseQueryString)),
-									lowercaseJsArrayResult = sortById(queryJsArray(lowercaseQueryString));
-								const uppercaseResponseTextPromise = responses[0].text(),
-									lowercaseResponseTextPromise = responses[1].text();
-								Promise.all([uppercaseResponseTextPromise, lowercaseResponseTextPromise]).then(
-									(responseTexts) => {
-										const uppercaseDatastoreResult = sortById(JSON.parse(responseTexts[0])),
-											lowercaseDatastoreResult = sortById(JSON.parse(responseTexts[1])),
-											jsArrayDifferencesArray = _.differenceWith(uppercaseJsArrayResult, lowercaseJsArrayResult, _.isEqual),
-											datastoreDifferencesArray = _.differenceWith(uppercaseDatastoreResult, lowercaseDatastoreResult, _.isEqual);
-										try {
-											assert.isEmpty(jsArrayDifferencesArray, 'jsArray implementation is case-insensitive');
-											assert.isEmpty(datastoreDifferencesArray, 'datastore implementation is case-insensitive');
-											resolve();
-										} catch (error) {
-											reject(error)
-										}
-									});
+								try {
+									const uppercaseJsArrayResult = sortById(queryJsArray(uppercaseQueryString)),
+										lowercaseJsArrayResult = sortById(queryJsArray(lowercaseQueryString));
+									const uppercaseDatastoreResult = sortById(responses[0]),
+										lowercaseDatastoreResult = sortById(responses[1]),
+										jsArrayDifferencesArray = _.differenceWith(uppercaseJsArrayResult, lowercaseJsArrayResult, _.isEqual),
+										datastoreDifferencesArray = _.differenceWith(uppercaseDatastoreResult, lowercaseDatastoreResult, _.isEqual);
+									assert.isEmpty(jsArrayDifferencesArray, "jsArray implementation is case-insensitive");
+									assert.isEmpty(datastoreDifferencesArray, "datastore implementation is case-insensitive");
+									resolve();
+								} catch (error) {
+									reject(error)
+								}
 							},
 							(error) => {
 								reject(error)
 							}
 						)
 					});
-				}
+				},
 			}
 		}
 	});
