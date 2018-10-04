@@ -307,7 +307,7 @@ define([
 						const jsArrayResult = sortById(queryJsArray(query)),
 							datastoreResult = sortById(datastoreResponse),
 							differencesArray = _.differenceWith(jsArrayResult, datastoreResult, _.isEqual);
-						assert.isEmpty(differencesArray);
+						assert.isEmpty(differencesArray, 'no differences in results');
 						resolve();
 					} catch (error) {
 						reject(error)
@@ -321,17 +321,93 @@ define([
 	}
 
 	function asyncQueryDatastore(queryString) {
-		return restStore.query(queryString);
+		return new Promise((resolve, reject) => {
+			restStore.query(queryString).then((responseData) => {
+					try {
+						const normalData = normalizeData(responseData);
+						resolve(normalData);
+					} catch (error) {
+						reject(error)
+					}
+				},
+				(error) => {
+					reject(error)
+				})
+		});
+	}
+
+	function normalizeData(data) {
+
+		function normalizeValue(property, value) {
+			const numericFields = ['latitude','longitude','age', 'isActive'];
+			if (numericFields.indexOf(property) >= 0) {
+				value = Number(value)
+			}
+			return value;
+		}
+
+		if (Array.isArray(data)) {
+			for (const item of data) {
+				for (let key in item) {
+					if (item.hasOwnProperty(key)) {
+						item[key] = normalizeValue(key, item[key]);
+
+					}
+				}
+			}
+		} else {
+			if (typeof data === 'object') {
+				for (let key in data) {
+					if (data.hasOwnProperty(key)) {
+						data[key] = normalizeValue(key, data[key]);
+
+					}
+				}
+			}
+		}
+		return data;
 	}
 
 	function queryJsArray(queryString) {
-		return memoryStore.querySync(queryString);
+		return normalizeData(memoryStore.querySync(queryString));
 	}
 
 	function sortById(collection) {
-		return _.sortBy(collection, [function (obj) {
-			return obj.id;
-		}]);
+		if (Array.isArray(collection)) {
+			return _.sortBy(collection, [function (obj) {
+				return obj.id;
+			}]);
+		} else {
+			return collection;
+		}
+	}
+
+	function asyncGetDifferenceBetweenTwoQueryResultsInRestStore(firstQueryString, secondQueryString) {
+		return new Promise((resolve, reject) => {
+			const firstResponsePromise = asyncQueryDatastore(firstQueryString),
+				secondQueryResponsePromise = asyncQueryDatastore(secondQueryString);
+			Promise.all([firstResponsePromise, secondQueryResponsePromise]).then(
+				(responses) => {
+					try {
+						const firstResult = sortById(responses[0]),
+							secondResult = sortById(responses[1]),
+							differencesArray = _.differenceWith(firstResult, secondResult, _.isEqual);
+						resolve(differencesArray);
+					} catch (error) {
+						reject(error)
+					}
+				},
+				(error) => {
+					reject(error)
+				}
+			)
+		});
+	}
+
+	function getDifferenceBetweenTwoQueryResultsInMemoryStore(firstQueryString, secondQueryString) {
+		const firstResult = sortById(queryJsArray(firstQueryString)),
+			secondResult = sortById(queryJsArray(secondQueryString));
+		return _.differenceWith(firstResult, secondResult, _.isEqual);
 	}
 
 	registerSuite('RQL Implementations Compatability Test', {
@@ -377,11 +453,6 @@ define([
 						});
 					})
 				},
-				'"select" node is compatible'() {
-					//this.skip();
-					const selectQueryString = 'select(id,firstName,phone)';
-					return checkQueryResultsEquality(selectQueryString);
-				},
 
 				'"limit" node is compatible'() {
 					//this.skip();
@@ -416,139 +487,201 @@ define([
 						})
 					});
 				},
+
 				'"in" node is compatible'() {
 					//this.skip();
 					const queryString = 'in(eyeColor,(green,brown))';
 					return checkQueryResultsEquality(queryString);
 				},
+
 				'"out" node is compatible'() {
 					//this.skip();
 					const queryString = 'out(favoriteFruit,(banana,apple))';
 					return checkQueryResultsEquality(queryString);
 				},
+
 				'"and" node is compatible'() {
 					//this.skip();
 					const queryString = 'and(in(eyeColor,(green,blue)),out(favoriteFruit,(pear,apple)))';
 					return checkQueryResultsEquality(queryString);
 				},
+
 				'"not" node is compatible'() {
 					//this.skip();
 					const queryString = 'not(in(eyeColor,(green,brown)))';
 					return checkQueryResultsEquality(queryString);
 				},
+
 				'"or" node is compatible'() {
 					//this.skip();
 					const queryString = 'or(in(eyeColor,(green,brown)),in(favoriteFruit,(banana,apple)))';
 					return checkQueryResultsEquality(queryString);
 				},
+
 				'"eq" node is compatible'() {
 					//this.skip();
 					const queryString = 'eq(firstName,Britney)';
 					return checkQueryResultsEquality(queryString);
 				},
+
 				'"ge" node is compatible'() {
 					//this.skip();
 					const queryString = 'ge(latitude,-36)';
 					return checkQueryResultsEquality(queryString);
 				},
+
 				'"gt" node is compatible'() {
 					//this.skip();
 					const queryString = 'gt(longitude,71)';
 					return checkQueryResultsEquality(queryString);
 				},
+
 				'"le" node is compatible'() {
 					//this.skip();
 					const queryString = 'le(age,33)';
 					return checkQueryResultsEquality(queryString);
 				},
+
 				'"lt" node is compatible'() {
 					//this.skip();
 					const queryString = 'lt(age,60)';
 					return checkQueryResultsEquality(queryString);
 				},
+
 				'"ne" node is compatible'() {
 					//this.skip();
 					const queryString = 'ne(id,5bacfee12639386f0953b3df)';
 					return checkQueryResultsEquality(queryString);
 				},
+
 				'"like" node is compatible'() {
 					//this.skip();
 					const queryString = 'like(firstName,*e)';
 					return checkQueryResultsEquality(queryString);
 				},
+
 				'"alike" node is compatible'() {
 					//this.skip();
 					const queryString = 'alike(id,*4*)';
 					return checkQueryResultsEquality(queryString);
 				},
+
+				'"first" node is compatible'() {
+					//this.skip();
+					const queryString = 'first()';
+					//return checkQueryResultsEquality(queryString);
+					return new Promise((resolve, reject) => {
+						asyncQueryDatastore(queryString).then((responseItem) => {
+							try {
+								const memoryResponse = queryJsArray(queryString);
+								assert.deepEqual(memoryResponse, responseItem, 'no difference in results')
+							} catch (error) {
+								reject(error)
+							}
+						});
+					})
+				},
+
+				'"one" node is compatible'() {
+					//this.skip();
+					const queryString = 'one()';
+					return checkQueryResultsEquality(queryString);
+				},
+
+				'"distinct" node is compatible'() {
+					//this.skip();
+					const queryString = 'distinct()';
+					return checkQueryResultsEquality(queryString);
+				},
+
+				'"values" node is compatible'() {
+					//this.skip();
+					const queryString = 'values(age)';
+					return checkQueryResultsEquality(queryString);
+				},
+
 			},
-			'Case sensitivity compatability': {
+			'"like"/"alike" nodes compatability': {
 				'"like" node is case-sensitive'() {
+					//this.skip();
 					const uppercaseQueryString = 'like(eyeColor,BROWN)',
 						lowercaseQueryString = 'like(eyeColor,brown)';
 
 					return new Promise((resolve, reject) => {
-						const uppercaseQueryResponsePromise = fetch(new Request(`${testDatastoreUrl}?${uppercaseQueryString}`, {
-								'method': 'GET',
-								headers: datastoreRequestHeaders,
-							})
-							),
-							lowercaseQueryResponsePromise = fetch(new Request(`${testDatastoreUrl}?${lowercaseQueryString}`, {
-									'method': 'GET',
-									headers: datastoreRequestHeaders,
-								})
-							);
-						Promise.all([uppercaseQueryResponsePromise, lowercaseQueryResponsePromise]).then(
-							(responses) => {
-								const uppercaseJsArrayResult = sortById(queryJsArray(uppercaseQueryString)),
-									lowercaseJsArrayResult = sortById(queryJsArray(lowercaseQueryString));
-								try {
-									const uppercaseDatastoreResult = sortById(responses[0]),
-										lowercaseDatastoreResult = sortById(responses[1]),
-										jsArrayDifferencesArray = _.differenceWith(uppercaseJsArrayResult, lowercaseJsArrayResult, _.isEqual),
-										datastoreDifferencesArray = _.differenceWith(uppercaseDatastoreResult, lowercaseDatastoreResult, _.isEqual);
-									assert.isNotEmpty(jsArrayDifferencesArray, "jsArray implementation is case-sensitive");
-									assert.isNotEmpty(datastoreDifferencesArray, "datastore implementation is case-sensitive");
-									resolve();
-								} catch (error) {
-									reject(error)
-								}
-							},
-							(error) => {
-								reject(error)
-							}
-						)
-					});
+							const jsArrayDifferencesArray = getDifferenceBetweenTwoQueryResultsInMemoryStore(uppercaseQueryString, lowercaseQueryString);
+							asyncGetDifferenceBetweenTwoQueryResultsInRestStore(uppercaseQueryString, lowercaseQueryString).then((datastoreDifferencesArray) => {
+									try {
+										assert.isNotEmpty(jsArrayDifferencesArray, "jsArray implementation is case-sensitive");
+										assert.isNotEmpty(datastoreDifferencesArray, "datastore implementation is case-sensitive");
+										resolve();
+									} catch (error) {
+										reject(error)
+									}
+								},
+								(error) => {
+									reject(error);
+								});
+						}
+					)
 				},
 				'"alike" node is case-insensitive'() {
+					//this.skip();
 					const uppercaseQueryString = 'alike(eyeColor,BROWN)',
 						lowercaseQueryString = 'alike(eyeColor,brown)';
 
 					return new Promise((resolve, reject) => {
-						const uppercaseQueryResponsePromise = asyncQueryDatastore(uppercaseQueryString),
-							lowercaseQueryResponsePromise = asyncQueryDatastore(lowercaseQueryString);
-						Promise.all([uppercaseQueryResponsePromise, lowercaseQueryResponsePromise]).then(
-							(responses) => {
-								try {
-									const uppercaseJsArrayResult = sortById(queryJsArray(uppercaseQueryString)),
-										lowercaseJsArrayResult = sortById(queryJsArray(lowercaseQueryString));
-									const uppercaseDatastoreResult = sortById(responses[0]),
-										lowercaseDatastoreResult = sortById(responses[1]),
-										jsArrayDifferencesArray = _.differenceWith(uppercaseJsArrayResult, lowercaseJsArrayResult, _.isEqual),
-										datastoreDifferencesArray = _.differenceWith(uppercaseDatastoreResult, lowercaseDatastoreResult, _.isEqual);
-									assert.isEmpty(jsArrayDifferencesArray, "jsArray implementation is case-insensitive");
-									assert.isEmpty(datastoreDifferencesArray, "datastore implementation is case-insensitive");
-									resolve();
-								} catch (error) {
+							const jsArrayDifferencesArray = getDifferenceBetweenTwoQueryResultsInMemoryStore(uppercaseQueryString, lowercaseQueryString);
+							asyncGetDifferenceBetweenTwoQueryResultsInRestStore(uppercaseQueryString, lowercaseQueryString).then((datastoreDifferencesArray) => {
+									try {
+										assert.isEmpty(jsArrayDifferencesArray, "jsArray implementation is case-insensitive");
+										assert.isEmpty(datastoreDifferencesArray, "datastore implementation is case-insensitive");
+										resolve();
+									} catch (error) {
+										reject(error)
+									}
+								},
+								(error) => {
 									reject(error)
 								}
-							},
-							(error) => {
-								reject(error)
-							}
-						)
-					});
+							)
+						},
+					)
 				},
+			},
+			'aggregate functions compatability': {
+
+				'"select" node is compatible'() {
+					//this.skip();
+					const selectQueryString = 'select(id,firstName,phone)';
+					return checkQueryResultsEquality(selectQueryString);
+				},
+
+				'"min" node is compatible'() {
+					//this.skip();
+					const queryString = 'select(min(age))';
+					return checkQueryResultsEquality(queryString);
+				},
+				'"max" node is compatible'() {
+					//this.skip();
+					const queryString = 'select(max(age))';
+					return checkQueryResultsEquality(queryString);
+				},
+				'"count" node is compatible'() {
+					//this.skip();
+					const queryString = 'select(count(age))';
+					return checkQueryResultsEquality(queryString);
+				},
+				'"avg" node is compatible'() {
+					//this.skip();
+					const queryString = 'select(avg(age))';
+					return checkQueryResultsEquality(queryString);
+				},
+				'"sum" node is compatible'() {
+					//this.skip();
+					const queryString = 'select(sum(age))';
+					return checkQueryResultsEquality(queryString);
+				},
+
 			}
 		}
 	});
