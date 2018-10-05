@@ -323,6 +323,9 @@ define([
 	function asyncQueryDatastore(queryString) {
 		return new Promise((resolve, reject) => {
 			restStore.query(queryString).then((responseData) => {
+					if (!responseData) {
+						reject(new Error('REST Datastore responded with error'))
+					}
 					try {
 						const normalData = normalizeData(responseData);
 						resolve(normalData);
@@ -339,9 +342,11 @@ define([
 	function normalizeData(data) {
 
 		function normalizeValue(property, value) {
-			const numericFields = ['latitude','longitude','age', 'isActive'];
-			if (numericFields.indexOf(property) >= 0) {
-				value = Number(value)
+			const numericFields = ['latitude', 'longitude', 'age', 'isActive'];
+			for (const fieldName of numericFields) {
+				if (property === fieldName || property.includes(fieldName + '->')) {
+					value = Number(value)
+				}
 			}
 			return value;
 		}
@@ -389,6 +394,9 @@ define([
 			Promise.all([firstResponsePromise, secondQueryResponsePromise]).then(
 				(responses) => {
 					try {
+						if (!responses[0] && !responses[1]) {
+							reject(new Error('REST Datastore responded with error'))
+						}
 						const firstResult = sortById(responses[0]),
 							secondResult = sortById(responses[1]),
 							differencesArray = _.differenceWith(firstResult, secondResult, _.isEqual);
@@ -490,13 +498,13 @@ define([
 
 				'"in" node is compatible'() {
 					//this.skip();
-					const queryString = 'in(eyeColor,(green,brown))';
+					const queryString = 'in(firstName,(Ollie,Mcfadden,Deloris))';
 					return checkQueryResultsEquality(queryString);
 				},
 
 				'"out" node is compatible'() {
 					//this.skip();
-					const queryString = 'out(favoriteFruit,(banana,apple))';
+					const queryString = 'out(lastName,(Jimenez,Palmer,Frost))';
 					return checkQueryResultsEquality(queryString);
 				},
 
@@ -508,7 +516,7 @@ define([
 
 				'"not" node is compatible'() {
 					//this.skip();
-					const queryString = 'not(in(eyeColor,(green,brown)))';
+					const queryString = 'not(in(firstName,(Ollie,Mcfadden,Deloris)))';
 					return checkQueryResultsEquality(queryString);
 				},
 
@@ -569,16 +577,19 @@ define([
 				'"first" node is compatible'() {
 					//this.skip();
 					const queryString = 'first()';
-					//return checkQueryResultsEquality(queryString);
 					return new Promise((resolve, reject) => {
-						asyncQueryDatastore(queryString).then((responseItem) => {
-							try {
-								const memoryResponse = queryJsArray(queryString);
-								assert.deepEqual(memoryResponse, responseItem, 'no difference in results')
-							} catch (error) {
+						asyncQueryDatastore(queryString).then(
+							(responseItem) => {
+								try {
+									const memoryResponse = queryJsArray(queryString);
+									assert.deepEqual(memoryResponse, responseItem, 'no difference in results')
+								} catch (error) {
+									reject(error)
+								}
+							},
+							(error) => {
 								reject(error)
-							}
-						});
+							});
 					})
 				},
 
@@ -601,7 +612,7 @@ define([
 				},
 
 			},
-			'"like"/"alike" nodes compatability': {
+			'Case sensitivity compatability': {
 				'"like" node is case-sensitive'() {
 					//this.skip();
 					const uppercaseQueryString = 'like(eyeColor,BROWN)',
@@ -647,6 +658,53 @@ define([
 						},
 					)
 				},
+				'"in" node is case-sensitive'() {
+					//this.skip();
+					const uppercaseQueryString = 'in(eyeColor,(BROWN,green))',
+						lowercaseQueryString = 'in(eyeColor,(brown,green))';
+
+					return new Promise((resolve, reject) => {
+							const jsArrayDifferencesArray = getDifferenceBetweenTwoQueryResultsInMemoryStore(uppercaseQueryString, lowercaseQueryString);
+							asyncGetDifferenceBetweenTwoQueryResultsInRestStore(uppercaseQueryString, lowercaseQueryString).then((datastoreDifferencesArray) => {
+									try {
+										assert.isNotEmpty(jsArrayDifferencesArray, "jsArray implementation is case-sensitive");
+										assert.isNotEmpty(datastoreDifferencesArray, "datastore implementation is case-sensitive");
+										resolve();
+									} catch (error) {
+										reject(error)
+									}
+								},
+								(error) => {
+									reject(error)
+								}
+							)
+						},
+					)
+				},
+				'"out" node is case-sensitive'() {
+					//this.skip();
+					const uppercaseQueryString = 'out(eyeColor,(BROWN,green))',
+						lowercaseQueryString = 'out(eyeColor,(brown,green))';
+
+					return new Promise((resolve, reject) => {
+							const jsArrayDifferencesArray = getDifferenceBetweenTwoQueryResultsInMemoryStore(uppercaseQueryString, lowercaseQueryString);
+							asyncGetDifferenceBetweenTwoQueryResultsInRestStore(uppercaseQueryString, lowercaseQueryString).then((datastoreDifferencesArray) => {
+									try {
+										assert.isNotEmpty(jsArrayDifferencesArray, "jsArray implementation is case-sensitive");
+										assert.isNotEmpty(datastoreDifferencesArray, "datastore implementation is case-sensitive");
+										resolve();
+									} catch (error) {
+										reject(error)
+									}
+								},
+								(error) => {
+									reject(error)
+								}
+							)
+						},
+					)
+				},
+
 			},
 			'aggregate functions compatability': {
 
