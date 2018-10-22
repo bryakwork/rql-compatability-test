@@ -632,21 +632,21 @@ define([
 					return checkQueryResultsEquality(queryString);
 				},
 
-				'"isTrue" node is compatible'() {
+				'"eqt" node is compatible'() {
 					//this.skip();
-					const queryString = 'isTrue(isActive)';
+					const queryString = 'eqt(isActive)';
 					return checkQueryResultsEquality(queryString);
 				},
 
-				'"isFalse" node is compatible'() {
+				'"eqf" node is compatible'() {
 					//this.skip();
-					const queryString = 'isFalse(isActive)';
+					const queryString = 'eqf(isActive)';
 					return checkQueryResultsEquality(queryString);
 				},
 
-				'"isNull" node is compatible'() {
+				'"eqn" node is compatible'() {
 					//this.skip();
-					const queryString = 'isNull(notes)';
+					const queryString = 'eqn(notes)';
 					return checkQueryResultsEquality(queryString);
 				},
 
