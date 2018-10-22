@@ -11,7 +11,7 @@ define([
 	const testCollection = [
 			{
 				"id": "5bacfee08134d4646fd8741e",
-				"isActive": 1,
+				"isActive": true,
 				"balance": "$1,077.29",
 				"age": 34,
 				"eyeColor": "blue",
@@ -21,11 +21,12 @@ define([
 				"registered": "Sunday, October 4, 2015 7:16 PM",
 				"latitude": 27.168643,
 				"longitude": 78.60084,
-				"favoriteFruit": "banana"
+				"favoriteFruit": "banana",
+				"notes": null
 			},
 			{
 				"id": "5bacfee1ebb6e18749ca9c3c",
-				"isActive": 1,
+				"isActive": true,
 				"balance": "$1,937.59",
 				"age": 30,
 				"eyeColor": "blue",
@@ -35,11 +36,12 @@ define([
 				"registered": "Sunday, April 17, 2016 6:07 PM",
 				"latitude": 32.065845,
 				"longitude": 142.185785,
-				"favoriteFruit": "pear"
+				"favoriteFruit": "pear",
+				"notes": null
 			},
 			{
 				"id": "5bacfee1c3639b168d814237",
-				"isActive": 0,
+				"isActive": false,
 				"balance": "$3,697.39",
 				"age": 38,
 				"eyeColor": "brown",
@@ -49,11 +51,12 @@ define([
 				"registered": "Monday, February 9, 2015 8:54 AM",
 				"latitude": 16.979361,
 				"longitude": 89.915774,
-				"favoriteFruit": "apple"
+				"favoriteFruit": "apple",
+				"notes": null
 			},
 			{
 				"id": "5bacfee1162cc4055b6fd810",
-				"isActive": 1,
+				"isActive": true,
 				"balance": "$2,174.27",
 				"age": 40,
 				"eyeColor": "brown",
@@ -63,11 +66,12 @@ define([
 				"registered": "Thursday, June 11, 2015 2:31 PM",
 				"latitude": -75.177066,
 				"longitude": -149.434758,
-				"favoriteFruit": "pear"
+				"favoriteFruit": "pear",
+				"notes": null
 			},
 			{
 				"id": "5bacfee19831aea0643ddb96",
-				"isActive": 0,
+				"isActive": false,
 				"balance": "$2,493.41",
 				"age": 20,
 				"eyeColor": "brown",
@@ -77,11 +81,12 @@ define([
 				"registered": "Tuesday, April 7, 2015 4:26 AM",
 				"latitude": 67.211107,
 				"longitude": 168.920175,
-				"favoriteFruit": "apple"
+				"favoriteFruit": "apple",
+				"notes": null
 			},
 			{
 				"id": "5bacfee1e32fc6e8f65c805e",
-				"isActive": 0,
+				"isActive": false,
 				"balance": "$3,221.50",
 				"age": 25,
 				"eyeColor": "blue",
@@ -91,11 +96,12 @@ define([
 				"registered": "Wednesday, December 23, 2015 5:37 PM",
 				"latitude": 47.146024,
 				"longitude": -48.160715,
-				"favoriteFruit": "pear"
+				"favoriteFruit": "pear",
+				"notes": null
 			},
 			{
 				"id": "5bacfee1bc88b9b445deca55",
-				"isActive": 1,
+				"isActive": true,
 				"balance": "$1,558.97",
 				"age": 40,
 				"eyeColor": "green",
@@ -105,11 +111,12 @@ define([
 				"registered": "Sunday, February 19, 2017 8:57 AM",
 				"latitude": 68.948356,
 				"longitude": 136.642013,
-				"favoriteFruit": "pear"
+				"favoriteFruit": "pear",
+				"notes": null
 			},
 			{
 				"id": "5bacfee18c9d3ecbd106c102",
-				"isActive": 1,
+				"isActive": true,
 				"balance": "$2,145.46",
 				"age": 31,
 				"eyeColor": "brown",
@@ -119,11 +126,12 @@ define([
 				"registered": "Saturday, November 1, 2014 12:12 AM",
 				"latitude": 27.599061,
 				"longitude": 44.040932,
-				"favoriteFruit": "strawberry"
+				"favoriteFruit": "strawberry",
+				"notes": null
 			},
 			{
 				"id": "5bacfee12639386f0953b3df",
-				"isActive": 0,
+				"isActive": false,
 				"balance": "$3,439.80",
 				"age": 23,
 				"eyeColor": "brown",
@@ -133,11 +141,12 @@ define([
 				"registered": "Sunday, April 30, 2017 11:22 AM",
 				"latitude": -73.515847,
 				"longitude": 149.571285,
-				"favoriteFruit": "banana"
+				"favoriteFruit": "banana",
+				"notes": 'notNullValue'
 			},
 			{
 				"id": "5bacfee1fef364626c25c9ff",
-				"isActive": 1,
+				"isActive": true,
 				"balance": "$2,872.71",
 				"age": 36,
 				"eyeColor": "green",
@@ -147,11 +156,12 @@ define([
 				"registered": "Sunday, December 18, 2016 2:56 PM",
 				"latitude": 30.712382,
 				"longitude": 109.588313,
-				"favoriteFruit": "strawberry"
+				"favoriteFruit": "strawberry",
+				"notes": 'notNullValue'
 			},
 			{
 				"id": "5bacfee19bb3a5ebb649965c",
-				"isActive": 0,
+				"isActive": false,
 				"balance": "$1,681.51",
 				"age": 27,
 				"eyeColor": "brown",
@@ -161,11 +171,12 @@ define([
 				"registered": "Saturday, July 25, 2015 1:41 AM",
 				"latitude": 83.501764,
 				"longitude": 175.247711,
-				"favoriteFruit": "pear"
+				"favoriteFruit": "pear",
+				"notes": null
 			},
 			{
 				"id": "5bacfee1db7bdaa95369c66b",
-				"isActive": 0,
+				"isActive": false,
 				"balance": "$2,727.91",
 				"age": 40,
 				"eyeColor": "green",
@@ -175,11 +186,12 @@ define([
 				"registered": "Monday, July 14, 2014 5:22 PM",
 				"latitude": 23.438074,
 				"longitude": 114.961302,
-				"favoriteFruit": "banana"
+				"favoriteFruit": "banana",
+				"notes": null
 			},
 			{
 				"id": "5bacfee1cb056862315bc6f2",
-				"isActive": 1,
+				"isActive": true,
 				"balance": "$1,800.98",
 				"age": 36,
 				"eyeColor": "green",
@@ -189,11 +201,12 @@ define([
 				"registered": "Wednesday, January 22, 2014 12:38 PM",
 				"latitude": 5.995259,
 				"longitude": 165.832892,
-				"favoriteFruit": "banana"
+				"favoriteFruit": "banana",
+				"notes": null
 			},
 			{
 				"id": "5bacfee1ddd32f28f92b102c",
-				"isActive": 1,
+				"isActive": true,
 				"balance": "$3,266.34",
 				"age": 20,
 				"eyeColor": "green",
@@ -203,11 +216,12 @@ define([
 				"registered": "Saturday, January 24, 2015 12:44 AM",
 				"latitude": -42.360999,
 				"longitude": -71.907995,
-				"favoriteFruit": "strawberry"
+				"favoriteFruit": "strawberry",
+				"notes": 'notNullValue'
 			},
 			{
 				"id": "5bacfee1ae07ac306fb30c60",
-				"isActive": 0,
+				"isActive": false,
 				"balance": "$2,747.00",
 				"age": 23,
 				"eyeColor": "brown",
@@ -217,11 +231,12 @@ define([
 				"registered": "Wednesday, August 1, 2018 4:02 AM",
 				"latitude": 84.035968,
 				"longitude": 61.69863,
-				"favoriteFruit": "apple"
+				"favoriteFruit": "apple",
+				"notes": 'notNullValue'
 			},
 			{
 				"id": "5bacfee1a08fcf0f44c1a4d6",
-				"isActive": 1,
+				"isActive": true,
 				"balance": "$3,581.30",
 				"age": 33,
 				"eyeColor": "brown",
@@ -231,11 +246,12 @@ define([
 				"registered": "Monday, July 14, 2014 12:03 AM",
 				"latitude": -53.603734,
 				"longitude": -137.752634,
-				"favoriteFruit": "apple"
+				"favoriteFruit": "apple",
+				"notes": null
 			},
 			{
 				"id": "5bacfee15bc7ccc13c33a530",
-				"isActive": 1,
+				"isActive": true,
 				"balance": "$1,135.24",
 				"age": 29,
 				"eyeColor": "green",
@@ -245,11 +261,12 @@ define([
 				"registered": "Thursday, March 3, 2016 4:13 PM",
 				"latitude": 3.048274,
 				"longitude": 82.118413,
-				"favoriteFruit": "pear"
+				"favoriteFruit": "pear",
+				"notes": null
 			},
 			{
 				"id": "5bacfee17af0751852ff9ecc",
-				"isActive": 0,
+				"isActive": false,
 				"balance": "$1,670.22",
 				"age": 30,
 				"eyeColor": "GREEN",
@@ -259,11 +276,12 @@ define([
 				"registered": "Monday, January 12, 2015 7:07 PM",
 				"latitude": -26.970452,
 				"longitude": 99.768199,
-				"favoriteFruit": "pear"
+				"favoriteFruit": "pear",
+				"notes": 'notNullValue'
 			},
 			{
 				"id": "5bacfee142a454f806f3e0c8",
-				"isActive": 1,
+				"isActive": true,
 				"balance": "$1,033.21",
 				"age": 32,
 				"eyeColor": "BROWN",
@@ -273,11 +291,12 @@ define([
 				"registered": "Monday, July 7, 2014 1:19 AM",
 				"latitude": -36.235635,
 				"longitude": -68.16712,
-				"favoriteFruit": "BANANA"
+				"favoriteFruit": "BANANA",
+				"notes": null
 			},
 			{
 				"id": "5bacfee1ff3b1a3c8cf1d5eb",
-				"isActive": 1,
+				"isActive": true,
 				"balance": "$3,976.25",
 				"age": 25,
 				"eyeColor": "BROWN",
@@ -287,11 +306,13 @@ define([
 				"registered": "Saturday, October 17, 2015 6:46 AM",
 				"latitude": -78.691136,
 				"longitude": 35.352737,
-				"favoriteFruit": "apple"
+				"favoriteFruit": "apple",
+				"notes": 'notNullValue'
 			}
 		],
-		testDatastoreUrl = '/api/datastore/test-datastore-csv',
-		//testDatastoreUrl = '/api/datastore/test-datastore-db',
+		//testDatastoreUrl = '/api/datastore/test-datastore-csv',
+		testDatastoreUrl = '/api/datastore/test-datastore-db',
+		//testDatastoreUrl = '/api/datastore/test-datastore-remote-db',
 		datastoreRequestHeaders = new Headers([
 			['Accept', 'application/json'],
 			['Content-Type', 'application/json']
@@ -608,6 +629,24 @@ define([
 				'"values" node is compatible'() {
 					//this.skip();
 					const queryString = 'values(age)';
+					return checkQueryResultsEquality(queryString);
+				},
+
+				'"isTrue" node is compatible'() {
+					//this.skip();
+					const queryString = 'isTrue(isActive)';
+					return checkQueryResultsEquality(queryString);
+				},
+
+				'"isFalse" node is compatible'() {
+					//this.skip();
+					const queryString = 'isFalse(isActive)';
+					return checkQueryResultsEquality(queryString);
+				},
+
+				'"isNull" node is compatible'() {
+					//this.skip();
+					const queryString = 'isNull(notes)';
 					return checkQueryResultsEquality(queryString);
 				},
 

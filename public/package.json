@@ -9,9 +9,9 @@
   "dependencies": {
     "dojo": "^1.14.2",
     "dojo-dstore": "^1.1.2",
-    "intern": "^4.3.1",
-    "rgrid": "^0.5.8",
-    "rollun-rql": "^0.4.1"
+    "intern": "^4.3.2",
+    "rgrid": "^0.5.11",
+    "rollun-rql": "^0.4.6"
   },
   "devDependencies": {},
   "scripts": {
